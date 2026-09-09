@@ -26,5 +26,5 @@ Para poder ejecutar este proyecto localmente, necesitas tener instalado lo sigui
 ### 1. Clonar el repositorio
 Abre una terminal y ejecuta el siguiente comando:
 ```bash
-git clone <URL_DE_TU_REPOSITORIO>
+git clone [<URL_DE_TU_REPOSITORIO>](https://github.com/alexisgtierrz/CooperativaBackend.git
 cd coop-servicios-backend
