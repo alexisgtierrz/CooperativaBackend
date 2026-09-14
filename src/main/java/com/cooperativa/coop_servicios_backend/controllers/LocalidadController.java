@@ -15,22 +15,35 @@ public class LocalidadController {
     @Autowired
     private LocalidadService service;
 
-    // Endpoint para obtener la lista de localidades (GET)
     @GetMapping
     public List<Localidad> listarTodas() {
         return service.obtenerTodas();
     }
 
-    // Endpoint para crear una nueva localidad (POST)
     @PostMapping
     public Localidad crear(@RequestBody Localidad localidad) {
         return service.guardar(localidad);
     }
 
-    // Endpoint para eliminar una localidad (DELETE)
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminar(@PathVariable Long id) {
         service.eliminar(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Localidad> obtenerPorId(@PathVariable Long id) {
+        return service.obtenerPorId(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Localidad> actualizar(@PathVariable Long id, @RequestBody Localidad localidadDetalles) {
+        return service.obtenerPorId(id).map(localidadExistente -> {
+            localidadExistente.setNombre(localidadDetalles.getNombre());
+            localidadExistente.setCodigoPostal(localidadDetalles.getCodigoPostal());
+            return ResponseEntity.ok(service.guardar(localidadExistente));
+        }).orElse(ResponseEntity.notFound().build());
     }
 }
