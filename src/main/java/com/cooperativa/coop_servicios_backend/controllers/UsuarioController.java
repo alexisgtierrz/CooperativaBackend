@@ -29,7 +29,6 @@ public class UsuarioController {
 
     @PostMapping
     public Usuario crear(@RequestBody Usuario usuario) {
-        //NOTA: Falta aplicar el HASH a la contraseña antes de guardarla.
         return service.guardar(usuario);
     }
 
@@ -37,7 +36,6 @@ public class UsuarioController {
     public ResponseEntity<Usuario> actualizar(@PathVariable Long id, @RequestBody Usuario usuarioDetalles) {
         return service.obtenerPorId(id).map(usuarioExistente -> {
             usuarioExistente.setEmail(usuarioDetalles.getEmail());
-            //Si mandan un password nuevo, lo actualizamos. (En el futuro, habría que hashearlo)
             if(usuarioDetalles.getPassword() != null && !usuarioDetalles.getPassword().isEmpty()){
                 usuarioExistente.setPassword(usuarioDetalles.getPassword());
             }
