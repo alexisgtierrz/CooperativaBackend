@@ -30,6 +30,10 @@ public class Usuario {
     @JsonIgnore
     private Cliente cliente;
 
+    @OneToOne(mappedBy = "usuario")
+    @JsonIgnore
+    private Empleado empleado;
+
     public Usuario() {}
 
     // Getters y Setters
@@ -51,4 +55,7 @@ public class Usuario {
     public void setCliente(Cliente cliente) {
         this.cliente = cliente;
     }
+
+    public Empleado getEmpleado() { return empleado; }
+    public void setEmpleado(Empleado empleado) { this.empleado = empleado; }
 }
