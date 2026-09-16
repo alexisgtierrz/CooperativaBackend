@@ -38,7 +38,7 @@ public class ServicioController {
         return service.obtenerPorId(id).map(servicioExistente -> {
             servicioExistente.setNombre(detalles.getNombre());
             servicioExistente.setDescripcion(detalles.getDescripcion());
-            servicioExistente.setActivo(detalles.getActivo());
+            servicioExistente.setEsActivo(detalles.getEsActivo());
             return ResponseEntity.ok(service.guardar(servicioExistente));
         }).orElse(ResponseEntity.notFound().build());
     }
