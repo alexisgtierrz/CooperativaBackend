@@ -1,5 +1,6 @@
 package com.cooperativa.coop_servicios_backend.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 @Entity
@@ -25,6 +26,10 @@ public class Usuario {
     @JoinColumn(name = "perfil_id", nullable = false)
     private Perfil perfil;
 
+    @OneToOne(mappedBy = "usuario")
+    @JsonIgnore
+    private Cliente cliente;
+
     public Usuario() {}
 
     // Getters y Setters
@@ -38,4 +43,12 @@ public class Usuario {
     public void setActivo(Boolean activo) { this.activo = activo; }
     public Perfil getPerfil() { return perfil; }
     public void setPerfil(Perfil perfil) { this.perfil = perfil; }
+
+    public Cliente getCliente() {
+        return cliente;
+    }
+
+    public void setCliente(Cliente cliente) {
+        this.cliente = cliente;
+    }
 }

@@ -33,6 +33,10 @@ public class Cliente {
     @JoinColumn(name = "domicilio_id", referencedColumnName = "id")
     private Domicilio domicilio;
 
+    @OneToOne
+    @JoinColumn(name = "usuario_id", referencedColumnName = "id")
+    private Usuario usuario;
+
     public Cliente() {}
 
     // Getters y Setters
@@ -64,4 +68,7 @@ public class Cliente {
     public void setDomicilio(Domicilio domicilio) {
         this.domicilio = domicilio;
     }
+
+    public Usuario getUsuario() { return usuario; }
+    public void setUsuario(Usuario usuario) { this.usuario = usuario; }
 }
