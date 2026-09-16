@@ -31,6 +31,9 @@ public class Ticket {
     @JoinColumn(name = "incidente_tecnico_id", referencedColumnName = "id")
     private IncidenteTecnico incidenteTecnico;
 
+    @OneToMany(mappedBy = "ticket", cascade = CascadeType.ALL)
+    private java.util.List<CambioEstado> historialEstados;
+
     public Ticket() {}
 
     // Getters y Setters...
@@ -51,4 +54,6 @@ public class Ticket {
 
     public IncidenteTecnico getIncidenteTecnico() { return incidenteTecnico; }
     public void setIncidenteTecnico(IncidenteTecnico incidenteTecnico) { this.incidenteTecnico = incidenteTecnico; }
+    public java.util.List<CambioEstado> getHistorialEstados() { return historialEstados; }
+    public void setHistorialEstados(java.util.List<CambioEstado> historialEstados) { this.historialEstados = historialEstados; }
 }

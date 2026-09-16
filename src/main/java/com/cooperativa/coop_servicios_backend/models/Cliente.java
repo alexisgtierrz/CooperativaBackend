@@ -37,6 +37,12 @@ public class Cliente {
     @JoinColumn(name = "usuario_id", referencedColumnName = "id")
     private Usuario usuario;
 
+    @OneToMany(mappedBy = "cliente", cascade = CascadeType.ALL)
+    private java.util.List<Suscripcion> suscripciones;
+
+    @OneToMany(mappedBy = "cliente", cascade = CascadeType.ALL)
+    private java.util.List<Ticket> tickets;
+
     public Cliente() {}
 
     // Getters y Setters
@@ -71,4 +77,10 @@ public class Cliente {
 
     public Usuario getUsuario() { return usuario; }
     public void setUsuario(Usuario usuario) { this.usuario = usuario; }
+
+    public java.util.List<Suscripcion> getSuscripciones() { return suscripciones; }
+    public void setSuscripciones(java.util.List<Suscripcion> suscripciones) { this.suscripciones = suscripciones; }
+
+    public java.util.List<Ticket> getTickets() { return tickets; }
+    public void setTickets(java.util.List<Ticket> tickets) { this.tickets = tickets; }
 }
