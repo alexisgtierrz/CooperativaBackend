@@ -2,8 +2,10 @@ package com.cooperativa.coop_servicios_backend.services;
 
 import com.cooperativa.coop_servicios_backend.models.Barrio;
 import com.cooperativa.coop_servicios_backend.models.Cliente;
+import com.cooperativa.coop_servicios_backend.models.Domicilio;
 import com.cooperativa.coop_servicios_backend.repositories.BarrioRepository;
 import com.cooperativa.coop_servicios_backend.repositories.ClienteRepository;
+import com.cooperativa.coop_servicios_backend.repositories.DomicilioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -16,18 +18,16 @@ public class ClienteService {
     @Autowired
     private ClienteRepository repository;
 
-    @Autowired
-    private BarrioRepository barrioRepository;
+    @Autowired private DomicilioRepository domicilioRepository;
 
     public List<Cliente> obtenerTodos() { return repository.findAll(); }
     public Optional<Cliente> obtenerPorId(Long id) { return repository.findById(id); }
 
     public Cliente guardar(Cliente cliente) {
-        //Verificamos que el barrio exista y lo cargamos completo
-        if (cliente.getBarrio() != null && cliente.getBarrio().getId() != null) {
-            Barrio barrioReal = barrioRepository.findById(cliente.getBarrio().getId())
-                    .orElseThrow(() -> new RuntimeException("El barrio especificado no existe"));
-            cliente.setBarrio(barrioReal);
+        if (cliente.getDomicilio() != null && cliente.getDomicilio().getId() != null) {
+            Domicilio domicilioReal = domicilioRepository.findById(cliente.getDomicilio().getId())
+                    .orElseThrow(() -> new RuntimeException("El domicilio especificado no existe"));
+            cliente.setDomicilio(domicilioReal);
         }
         return repository.save(cliente);
     }

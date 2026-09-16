@@ -42,7 +42,7 @@ public class ClienteController {
             clienteExistente.setTelefono(clienteDetalles.getTelefono());
             clienteExistente.setEmail(clienteDetalles.getEmail());
             clienteExistente.setActivo(clienteDetalles.getActivo());
-            clienteExistente.setBarrio(clienteDetalles.getBarrio());
+            clienteExistente.setDomicilio(clienteDetalles.getDomicilio());
             return ResponseEntity.ok(service.guardar(clienteExistente));
         }).orElse(ResponseEntity.notFound().build());
     }

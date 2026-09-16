@@ -29,10 +29,9 @@ public class Cliente {
     @Column(nullable = false)
     private Boolean activo = true;
 
-    //Relación Muchos-a-Uno: Muchos clientes pueden vivir en un mismo Barrio
-    @ManyToOne
-    @JoinColumn(name = "barrio_id", nullable = false)
-    private Barrio barrio;
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "domicilio_id", referencedColumnName = "id")
+    private Domicilio domicilio;
 
     public Cliente() {}
 
@@ -58,6 +57,11 @@ public class Cliente {
     public Boolean getActivo() { return activo; }
     public void setActivo(Boolean activo) { this.activo = activo; }
 
-    public Barrio getBarrio() { return barrio; }
-    public void setBarrio(Barrio barrio) { this.barrio = barrio; }
+    public Domicilio getDomicilio() {
+        return domicilio;
+    }
+
+    public void setDomicilio(Domicilio domicilio) {
+        this.domicilio = domicilio;
+    }
 }
