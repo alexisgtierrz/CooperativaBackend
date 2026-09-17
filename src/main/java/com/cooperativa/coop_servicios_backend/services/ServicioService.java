@@ -16,6 +16,13 @@ public class ServicioService {
 
     public List<Servicio> obtenerTodos() { return repository.findAll(); }
     public Optional<Servicio> obtenerPorId(Long id) { return repository.findById(id); }
-    public Servicio guardar(Servicio servicio) { return repository.save(servicio); }
-    public void eliminar(Long id) { repository.deleteById(id); }
+    public Servicio guardar(Servicio servicio) {
+        if (servicio.getTipoServicio() == null || servicio.getTipoServicio().getId() == null) {
+            throw new RuntimeException("Error: El Servicio debe tener un Tipo de Servicio asignado.");
+        }
+        if (servicio.getTarifa() == null || servicio.getTarifa().getId() == null) {
+            throw new RuntimeException("Error: El Servicio debe tener una Tarifa asignada.");
+        }
+        return repository.save(servicio);
+    }    public void eliminar(Long id) { repository.deleteById(id); }
 }

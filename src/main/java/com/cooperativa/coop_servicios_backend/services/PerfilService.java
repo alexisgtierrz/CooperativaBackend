@@ -16,6 +16,10 @@ public class PerfilService {
 
     public List<Perfil> obtenerTodos() { return repository.findAll(); }
     public Optional<Perfil> obtenerPorId(Long id) { return repository.findById(id); }
-    public Perfil guardar(Perfil perfil) { return repository.save(perfil); }
-    public void eliminar(Long id) { repository.deleteById(id); }
+    public Perfil guardar(Perfil perfil) {
+        if (perfil.getPermisos() == null || perfil.getPermisos().isEmpty()) {
+            throw new RuntimeException("Error: Un Perfil debe crearse con al menos un Permiso asignado.");
+        }
+        return repository.save(perfil);
+    }    public void eliminar(Long id) { repository.deleteById(id); }
 }

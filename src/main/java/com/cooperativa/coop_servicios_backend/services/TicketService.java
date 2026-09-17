@@ -11,5 +11,15 @@ public class TicketService {
     @Autowired private TicketRepository repository;
 
     public List<Ticket> obtenerTodos() { return repository.findAll(); }
-    public Ticket guardar(Ticket reclamo) { return repository.save(reclamo); }
+    public Ticket guardar(Ticket ticket) {
+        if (ticket.getIncidenteTecnico() == null) {
+            throw new RuntimeException("Error: Un Ticket debe contener un Incidente Técnico al ser creado.");
+        }
+
+        if (ticket.getIncidenteTecnico().getTipoIncidente() == null || ticket.getIncidenteTecnico().getTipoIncidente().getId() == null) {
+            throw new RuntimeException("Error: El Incidente Técnico debe tener un Tipo de Incidente asignado.");
+        }
+
+        return repository.save(ticket);
+    }
 }

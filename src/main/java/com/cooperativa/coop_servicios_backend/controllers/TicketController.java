@@ -8,7 +8,7 @@ import java.util.List;
 
 @CrossOrigin(origins = "http://localhost:5173")
 @RestController
-@RequestMapping("/api/reclamos")
+@RequestMapping("/api/tickets")
 public class TicketController {
 
     @Autowired private TicketService service;
@@ -17,5 +17,5 @@ public class TicketController {
     public List<Ticket> listarTodos() { return service.obtenerTodos(); }
 
     @PostMapping
-    public Ticket crear(@RequestBody Ticket reclamo) { return service.guardar(reclamo); }
+    public Ticket crear(@RequestBody Ticket ticket) { return service.guardar(ticket); }
 }
