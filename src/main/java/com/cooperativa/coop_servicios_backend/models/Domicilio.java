@@ -25,10 +25,6 @@ public class Domicilio {
     @JoinColumn(name = "barrio_id", nullable = false)
     private Barrio barrio;
 
-    @OneToOne(mappedBy = "domicilio")
-    @JsonIgnore
-    private Cliente cliente;
-
     public Domicilio() {}
 
     public Long getId() {
@@ -85,13 +81,5 @@ public class Domicilio {
 
     public void setBarrio(Barrio barrio) {
         this.barrio = barrio;
-    }
-
-    public Cliente getCliente() {
-        return cliente;
-    }
-
-    public void setCliente(Cliente cliente) {
-        this.cliente = cliente;
     }
 }

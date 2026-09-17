@@ -20,18 +20,12 @@ public class Ticket {
     @Column(length = 100)
     private String categoria;
 
-    // --- RELACIONES SEGÚN EL UML ---
-
-    @ManyToOne
-    @JoinColumn(name = "cliente_id", nullable = false)
-    private Cliente cliente;
-
-    // El rombo negro hacia IncidenteTecnico (Composición 1 a 1)
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "incidente_tecnico_id", referencedColumnName = "id")
     private IncidenteTecnico incidenteTecnico;
 
     @OneToMany(mappedBy = "ticket", cascade = CascadeType.ALL)
+    @JoinColumn(name = "ticket_id")
     private java.util.List<CambioEstado> historialEstados;
 
     public Ticket() {}
@@ -48,9 +42,6 @@ public class Ticket {
 
     public String getCategoria() { return categoria; }
     public void setCategoria(String categoria) { this.categoria = categoria; }
-
-    public Cliente getCliente() { return cliente; }
-    public void setCliente(Cliente cliente) { this.cliente = cliente; }
 
     public IncidenteTecnico getIncidenteTecnico() { return incidenteTecnico; }
     public void setIncidenteTecnico(IncidenteTecnico incidenteTecnico) { this.incidenteTecnico = incidenteTecnico; }

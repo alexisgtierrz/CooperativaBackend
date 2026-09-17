@@ -16,11 +16,6 @@ public class CambioEstado {
 
     private LocalDate fechaHoraFin;
 
-    //Relación hacia el Ticket
-    @ManyToOne
-    @JoinColumn(name = "ticket_id", nullable = false)
-    private Ticket ticket;
-
     //Relación hacia el Estado
     @ManyToOne
     @JoinColumn(name = "estado_id", nullable = false)
@@ -57,14 +52,6 @@ public class CambioEstado {
 
     public void setFechaHoraFin(LocalDate fechaHoraFin) {
         this.fechaHoraFin = fechaHoraFin;
-    }
-
-    public Ticket getTicket() {
-        return ticket;
-    }
-
-    public void setTicket(Ticket ticket) {
-        this.ticket = ticket;
     }
 
     public Estado getEstado() {

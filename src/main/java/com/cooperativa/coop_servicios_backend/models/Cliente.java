@@ -37,10 +37,12 @@ public class Cliente {
     @JoinColumn(name = "usuario_id", referencedColumnName = "id")
     private Usuario usuario;
 
-    @OneToMany(mappedBy = "cliente", cascade = CascadeType.ALL)
+    @OneToMany(cascade = CascadeType.ALL)
+    @JoinColumn(name = "cliente_id")
     private java.util.List<Suscripcion> suscripciones;
 
     @OneToMany(mappedBy = "cliente", cascade = CascadeType.ALL)
+    @JoinColumn(name = "cliente_id")
     private java.util.List<Ticket> tickets;
 
     public Cliente() {}

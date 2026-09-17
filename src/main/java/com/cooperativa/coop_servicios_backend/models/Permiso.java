@@ -14,11 +14,6 @@ public class Permiso {
     @Column(nullable = false, length = 100)
     private String nombre;
 
-    // Relación Muchos a Uno: Varios permisos pertenecen a un perfil
-    @ManyToOne
-    @JoinColumn(name = "perfil_id", nullable = false)
-    @JsonIgnore // Evita el bucle infinito al traer el perfil
-    private Perfil perfil;
 
     public Permiso() {}
 
@@ -28,7 +23,4 @@ public class Permiso {
 
     public String getNombre() { return nombre; }
     public void setNombre(String nombre) { this.nombre = nombre; }
-
-    public Perfil getPerfil() { return perfil; }
-    public void setPerfil(Perfil perfil) { this.perfil = perfil; }
 }

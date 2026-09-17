@@ -26,14 +26,6 @@ public class Usuario {
     @JoinColumn(name = "perfil_id", nullable = false)
     private Perfil perfil;
 
-    @OneToOne(mappedBy = "usuario")
-    @JsonIgnore
-    private Cliente cliente;
-
-    @OneToOne(mappedBy = "usuario")
-    @JsonIgnore
-    private Empleado empleado;
-
     public Usuario() {}
 
     // Getters y Setters
@@ -47,15 +39,4 @@ public class Usuario {
     public void setActivo(Boolean activo) { this.activo = activo; }
     public Perfil getPerfil() { return perfil; }
     public void setPerfil(Perfil perfil) { this.perfil = perfil; }
-
-    public Cliente getCliente() {
-        return cliente;
-    }
-
-    public void setCliente(Cliente cliente) {
-        this.cliente = cliente;
-    }
-
-    public Empleado getEmpleado() { return empleado; }
-    public void setEmpleado(Empleado empleado) { this.empleado = empleado; }
 }

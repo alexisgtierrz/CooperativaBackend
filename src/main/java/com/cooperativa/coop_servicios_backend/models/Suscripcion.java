@@ -16,11 +16,6 @@ public class Suscripcion {
 
     private LocalDate fechaBaja;
 
-    //Cliente puede tener 1 o muchas Suscripciones
-    @ManyToOne
-    @JoinColumn(name = "cliente_id", nullable = false)
-    private Cliente cliente;
-
     //Servicio puede estar en 1 o muchas Suscripciones
     @ManyToOne
     @JoinColumn(name = "servicio_id", nullable = false)
@@ -42,9 +37,6 @@ public class Suscripcion {
 
     public LocalDate getFechaBaja() { return fechaBaja; }
     public void setFechaBaja(LocalDate fechaBaja) { this.fechaBaja = fechaBaja; }
-
-    public Cliente getCliente() { return cliente; }
-    public void setCliente(Cliente cliente) { this.cliente = cliente; }
 
     public Servicio getServicio() { return servicio; }
     public void setServicio(Servicio servicio) { this.servicio = servicio; }
