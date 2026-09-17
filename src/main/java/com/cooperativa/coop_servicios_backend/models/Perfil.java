@@ -15,7 +15,7 @@ public class Perfil {
     @Column(nullable = false, unique = true, length = 50)
     private String nombre;
 
-    @OneToMany(mappedBy = "perfil", cascade = CascadeType.ALL)
+    @OneToMany(cascade = CascadeType.ALL)
     @JoinColumn(name = "perfil_id")
     private List<Permiso> permisos;
 

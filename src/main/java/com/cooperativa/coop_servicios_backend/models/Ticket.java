@@ -24,7 +24,7 @@ public class Ticket {
     @JoinColumn(name = "incidente_tecnico_id", referencedColumnName = "id")
     private IncidenteTecnico incidenteTecnico;
 
-    @OneToMany(mappedBy = "ticket", cascade = CascadeType.ALL)
+    @OneToMany(cascade = CascadeType.ALL)
     @JoinColumn(name = "ticket_id")
     private java.util.List<CambioEstado> historialEstados;
 
