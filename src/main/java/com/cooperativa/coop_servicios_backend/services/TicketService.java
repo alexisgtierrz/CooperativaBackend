@@ -5,12 +5,22 @@ import com.cooperativa.coop_servicios_backend.repositories.TicketRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class TicketService {
-    @Autowired private TicketRepository repository;
 
-    public List<Ticket> obtenerTodos() { return repository.findAll(); }
+    @Autowired
+    private TicketRepository repository;
+
+    public List<Ticket> obtenerTodos() {
+        return repository.findAll();
+    }
+
+    public Optional<Ticket> obtenerPorId(Long id) {
+        return repository.findById(id);
+    }
+
     public Ticket guardar(Ticket ticket) {
         if (ticket.getIncidenteTecnico() == null) {
             throw new RuntimeException("Error: Un Ticket debe contener un Incidente Técnico al ser creado.");
@@ -21,5 +31,9 @@ public class TicketService {
         }
 
         return repository.save(ticket);
+    }
+
+    public void eliminar(Long id) {
+        repository.deleteById(id);
     }
 }

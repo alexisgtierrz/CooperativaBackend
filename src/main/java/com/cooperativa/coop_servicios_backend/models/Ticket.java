@@ -47,4 +47,5 @@ public class Ticket {
     public void setIncidenteTecnico(IncidenteTecnico incidenteTecnico) { this.incidenteTecnico = incidenteTecnico; }
     public java.util.List<CambioEstado> getHistorialEstados() { return historialEstados; }
     public void setHistorialEstados(java.util.List<CambioEstado> historialEstados) { this.historialEstados = historialEstados; }
+
 }
