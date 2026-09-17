@@ -43,6 +43,10 @@ public class ClienteController {
             clienteExistente.setEmail(clienteDetalles.getEmail());
             clienteExistente.setActivo(clienteDetalles.getActivo());
             clienteExistente.setDomicilio(clienteDetalles.getDomicilio());
+            if (clienteDetalles.getSuscripciones() != null) {
+                clienteExistente.getSuscripciones().clear();
+                clienteExistente.getSuscripciones().addAll(clienteDetalles.getSuscripciones());
+            }
             return ResponseEntity.ok(service.guardar(clienteExistente));
         }).orElse(ResponseEntity.notFound().build());
     }

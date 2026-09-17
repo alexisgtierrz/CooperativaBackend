@@ -24,11 +24,15 @@ public class ClienteService {
     public Optional<Cliente> obtenerPorId(Long id) { return repository.findById(id); }
 
     public Cliente guardar(Cliente cliente) {
-        if (cliente.getDomicilio() != null && cliente.getDomicilio().getId() != null) {
-            Domicilio domicilioReal = domicilioRepository.findById(cliente.getDomicilio().getId())
-                    .orElseThrow(() -> new RuntimeException("El domicilio especificado no existe"));
-            cliente.setDomicilio(domicilioReal);
+        if (cliente.getDomicilio() == null || cliente.getDomicilio().getId() == null) {
+            throw new RuntimeException("Error arquitectónico: El Cliente debe tener un Domicilio asignado de forma obligatoria.");
         }
+
+        Domicilio domicilioReal = domicilioRepository.findById(cliente.getDomicilio().getId())
+                .orElseThrow(() -> new RuntimeException("El domicilio especificado (" + cliente.getDomicilio().getId() + ") no existe en la base de datos."));
+
+        cliente.setDomicilio(domicilioReal);
+
         return repository.save(cliente);
     }
 
