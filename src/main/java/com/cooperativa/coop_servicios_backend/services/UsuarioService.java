@@ -25,11 +25,16 @@ public class UsuarioService {
     public Optional<Usuario> obtenerPorEmail(String email) { return repository.findByEmail(email); }
 
     public Usuario guardar(Usuario usuario) {
-        //Verificamos que traiga contraseña y que no esté ya encriptada, para evitar que volvamos a encriptar algo que ya estaba encriptado si hacemos un PUT.
+        // 1. Encriptar la contraseña antes de guardarla si no viene encriptada
         if (usuario.getPassword() != null && !usuario.getPassword().startsWith("$2a$")) {
-            String hash = passwordEncoder.encode(usuario.getPassword());
-            usuario.setPassword(hash);
+            usuario.setPassword(passwordEncoder.encode(usuario.getPassword()));
         }
+
+        // 2. Asegurar que esté activo por defecto
+        if (usuario.getActivo() == null) {
+            usuario.setActivo(true);
+        }
+
         return repository.save(usuario);
     }
     public void eliminar(Long id) { repository.deleteById(id); }

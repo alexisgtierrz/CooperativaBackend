@@ -1,9 +1,11 @@
 package com.cooperativa.coop_servicios_backend.controllers;
 
 import com.cooperativa.coop_servicios_backend.models.Usuario;
+import com.cooperativa.coop_servicios_backend.repositories.UsuarioRepository;
 import com.cooperativa.coop_servicios_backend.services.UsuarioService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -14,6 +16,12 @@ public class UsuarioController {
 
     @Autowired
     private UsuarioService service;
+
+    @Autowired
+    private UsuarioRepository usuarioRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @GetMapping
     public List<Usuario> listarTodos() {
@@ -28,8 +36,14 @@ public class UsuarioController {
     }
 
     @PostMapping
-    public Usuario crear(@RequestBody Usuario usuario) {
-        return service.guardar(usuario);
+    public ResponseEntity<Usuario> crearUsuario(@RequestBody Usuario usuario) {
+        // ENCRIPTAR SOLO SI NO ESTÁ ENCRIPTADA YA
+        if (usuario.getPassword() != null && !usuario.getPassword().startsWith("$2a$")) {
+            usuario.setPassword(passwordEncoder.encode(usuario.getPassword()));
+        }
+
+        Usuario nuevoUsuario = usuarioRepository.save(usuario);
+        return ResponseEntity.ok(nuevoUsuario);
     }
 
     @PutMapping("/{id}")

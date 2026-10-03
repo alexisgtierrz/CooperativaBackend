@@ -1,12 +1,17 @@
 package com.cooperativa.coop_servicios_backend.controllers;
 
 import com.cooperativa.coop_servicios_backend.models.Cliente;
+import com.cooperativa.coop_servicios_backend.repositories.ClienteRepository;
 import com.cooperativa.coop_servicios_backend.services.ClienteService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 @CrossOrigin(origins = "http://localhost:5173")
 @RestController
@@ -15,6 +20,9 @@ public class ClienteController {
 
     @Autowired
     private ClienteService service;
+
+    @Autowired
+    private ClienteRepository clienteRepository;
 
     @GetMapping
     public List<Cliente> listarTodos() {
@@ -26,6 +34,25 @@ public class ClienteController {
         return service.obtenerPorId(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/perfil-actual")
+    public ResponseEntity<Object> obtenerPerfilActual(Principal principal) {
+        String email = principal.getName(); // El email que viene dentro del token JWT
+
+        // Buscamos si el cliente está asociado a ese usuario
+        Optional<Cliente> clienteOpt = clienteRepository.findByUsuarioEmail(email);
+
+        if (clienteOpt.isPresent()) {
+            Cliente cliente = clienteOpt.get();
+            Map<String, Object> response = new HashMap<>();
+            response.put("tipoUsuario", "CLIENTE");
+            response.put("usuario", Map.of("email", email));
+            response.put("perfil", cliente);
+            return ResponseEntity.ok(response);
+        }
+
+        return ResponseEntity.status(404).body("Perfil de cliente no encontrado para el usuario actual.");
     }
 
     @PostMapping
