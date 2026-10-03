@@ -15,8 +15,12 @@ public class Perfil {
     @Column(nullable = false, unique = true, length = 50)
     private String nombre;
 
-    @OneToMany(cascade = CascadeType.ALL)
-    @JoinColumn(name = "perfil_id")
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "perfil_permiso",
+            joinColumns = @JoinColumn(name = "perfil_id"),
+            inverseJoinColumns = @JoinColumn(name = "permiso_id")
+    )
     private List<Permiso> permisos;
 
 

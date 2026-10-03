@@ -1,9 +1,7 @@
 package com.cooperativa.coop_servicios_backend.services;
 
-import com.cooperativa.coop_servicios_backend.models.Barrio;
 import com.cooperativa.coop_servicios_backend.models.Cliente;
 import com.cooperativa.coop_servicios_backend.models.Domicilio;
-import com.cooperativa.coop_servicios_backend.repositories.BarrioRepository;
 import com.cooperativa.coop_servicios_backend.repositories.ClienteRepository;
 import com.cooperativa.coop_servicios_backend.repositories.DomicilioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,14 +22,12 @@ public class ClienteService {
     public Optional<Cliente> obtenerPorId(Long id) { return repository.findById(id); }
 
     public Cliente guardar(Cliente cliente) {
-        if (cliente.getDomicilio() == null || cliente.getDomicilio().getId() == null) {
-            throw new RuntimeException("Error arquitectónico: El Cliente debe tener un Domicilio asignado de forma obligatoria.");
+
+        // Si el cliente trae un domicilio con datos pero sin ID
+        if (cliente.getDomicilio() != null && cliente.getDomicilio().getId() == null) {
+            Domicilio domicilioGuardado = domicilioRepository.save(cliente.getDomicilio());
+            cliente.setDomicilio(domicilioGuardado);
         }
-
-        Domicilio domicilioReal = domicilioRepository.findById(cliente.getDomicilio().getId())
-                .orElseThrow(() -> new RuntimeException("El domicilio especificado (" + cliente.getDomicilio().getId() + ") no existe en la base de datos."));
-
-        cliente.setDomicilio(domicilioReal);
 
         return repository.save(cliente);
     }

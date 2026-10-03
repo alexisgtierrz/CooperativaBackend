@@ -5,24 +5,37 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.stereotype.Component;
+import org.springframework.security.core.GrantedAuthority;
 
 import java.security.Key;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Component
 public class JwtUtil {
 
-    //Clave secreta para firmar el token. Debe ser larga y segura para que el algoritmo HS256 funcione.
+    // Clave secreta para firmar el token. Debe ser larga y segura para que el algoritmo HS256 funcione.
     private static final String SECRET_KEY_STRING = "EstaEsUnaClaveSecretaMuyLargaYSeguraParaNuestraCooperativa2026";
     private final Key SECRET_KEY = Keys.hmacShaKeyFor(SECRET_KEY_STRING.getBytes());
 
-    //Tiempo de validez del token: 10 horas (en milisegundos)
+    // Tiempo de validez del token: 10 horas (en milisegundos)
     private static final long EXPIRATION_TIME = 1000 * 60 * 60 * 10;
 
-    //Metodo para generar el token usando el email del usuario
-    public String generarToken(String email) {
+    public String generarToken(String email, List<GrantedAuthority> authorities) {
+        Map<String, Object> claims = new HashMap<>();
+
+        List<String> roles = authorities.stream()
+                .map(GrantedAuthority::getAuthority)
+                .collect(Collectors.toList());
+
+        claims.put("roles", roles);
+
         return Jwts.builder()
+                .setClaims(claims)
                 .setSubject(email)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
@@ -30,12 +43,15 @@ public class JwtUtil {
                 .compact();
     }
 
-    //Metodo para extraer el email (subject) de un token que nos manda el frontend
     public String extraerEmail(String token) {
         return extraerClaim(token, Claims::getSubject);
     }
 
-    //Metodo para validar si el token es correcto y no está vencido
+    public List<String> extraerPermisos(String token) {
+        Claims claims = extraerTodasLasClaims(token);
+        return (List<String>) claims.get("roles");
+    }
+
     public Boolean validarToken(String token, String emailUsuario) {
         final String email = extraerEmail(token);
         return (email.equals(emailUsuario) && !tokenExpirado(token));

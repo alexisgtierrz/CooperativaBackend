@@ -36,17 +36,52 @@ public class ClienteController {
     @PutMapping("/{id}")
     public ResponseEntity<Cliente> actualizar(@PathVariable Long id, @RequestBody Cliente clienteDetalles) {
         return service.obtenerPorId(id).map(clienteExistente -> {
+            // Actualizamos datos básicos
             clienteExistente.setNombre(clienteDetalles.getNombre());
             clienteExistente.setApellido(clienteDetalles.getApellido());
             clienteExistente.setDni(clienteDetalles.getDni());
             clienteExistente.setTelefono(clienteDetalles.getTelefono());
             clienteExistente.setEmail(clienteDetalles.getEmail());
             clienteExistente.setActivo(clienteDetalles.getActivo());
-            clienteExistente.setDomicilio(clienteDetalles.getDomicilio());
-            if (clienteDetalles.getSuscripciones() != null) {
-                clienteExistente.getSuscripciones().clear();
-                clienteExistente.getSuscripciones().addAll(clienteDetalles.getSuscripciones());
+
+            if (clienteDetalles.getDomicilio() != null) {
+                clienteExistente.setDomicilio(clienteDetalles.getDomicilio());
             }
+
+            if (clienteDetalles.getUsuario() != null) {
+                clienteExistente.setUsuario(clienteDetalles.getUsuario());
+            }
+
+            // Manejo de suscripciones
+            if (clienteDetalles.getSuscripciones() != null) {
+
+                java.util.Map<Long, com.cooperativa.coop_servicios_backend.models.Suscripcion> subsEntrantesMap = clienteDetalles.getSuscripciones().stream()
+                        .filter(s -> s.getId() != null)
+                        .collect(java.util.stream.Collectors.toMap(com.cooperativa.coop_servicios_backend.models.Suscripcion::getId, s -> s));
+
+                // Recorremos las suscripciones que ya tenía el cliente en la base de datos
+                for (com.cooperativa.coop_servicios_backend.models.Suscripcion subExistente : clienteExistente.getSuscripciones()) {
+                    if (subExistente.getFechaBaja() == null && !subsEntrantesMap.containsKey(subExistente.getId())) {
+                        subExistente.setFechaBaja(java.time.LocalDate.now());
+                    }
+                }
+
+                for (com.cooperativa.coop_servicios_backend.models.Suscripcion subDetalle : clienteDetalles.getSuscripciones()) {
+                    if (subDetalle.getId() == null) {
+                        if (subDetalle.getFechaAlta() == null) {
+                            subDetalle.setFechaAlta(java.time.LocalDate.now());
+                        }
+                        clienteExistente.getSuscripciones().add(subDetalle);
+                    } else {
+                        for (com.cooperativa.coop_servicios_backend.models.Suscripcion subExistente : clienteExistente.getSuscripciones()) {
+                            if (subExistente.getId().equals(subDetalle.getId())) {
+                                subExistente.setFechaBaja(null);
+                            }
+                        }
+                    }
+                }
+            }
+
             return ResponseEntity.ok(service.guardar(clienteExistente));
         }).orElse(ResponseEntity.notFound().build());
     }
