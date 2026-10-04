@@ -11,6 +11,7 @@ import com.cooperativa.coop_servicios_backend.repositories.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import java.time.ZoneId;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -92,6 +93,19 @@ public class ClienteService {
             } else {
                 // Si el email ya tenía cuenta de usuario, lo vinculamos
                 cliente.setUsuario(usuarioExistente.get());
+            }
+        }
+
+        // 3. LÓGICA DE VENCIMIENTO DE SUSCRIPCIONES
+        if (cliente.getSuscripciones() != null) {
+            // Le decimos a Java que use explícitamente el huso horario de Argentina
+            ZoneId zonaArgentina = ZoneId.of("America/Argentina/Buenos_Aires");
+
+            for (var sub : cliente.getSuscripciones()) {
+                if (sub.getId() == null) {
+                    sub.setFechaAlta(LocalDate.now(zonaArgentina));
+                    sub.setFechaHasta(LocalDate.now(zonaArgentina).plusMonths(1));
+                }
             }
         }
 

@@ -14,6 +14,8 @@ public class Suscripcion {
     @Column(nullable = false)
     private LocalDate fechaAlta;
 
+    private LocalDate fechaHasta;
+
     private LocalDate fechaBaja;
 
     //Servicio puede estar en 1 o muchas Suscripciones
@@ -43,4 +45,12 @@ public class Suscripcion {
 
     public Domicilio getDomicilio() { return domicilio; }
     public void setDomicilio(Domicilio domicilio) { this.domicilio = domicilio; }
+
+    public LocalDate getFechaHasta() {
+        return fechaHasta;
+    }
+
+    public void setFechaHasta(LocalDate fechaHasta) {
+        this.fechaHasta = fechaHasta;
+    }
 }
