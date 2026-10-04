@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import java.time.ZoneId;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -43,9 +44,10 @@ public class ClienteService {
         return repository.findById(id);
     }
 
+    @Transactional
     public Cliente guardar(Cliente cliente) {
 
-        // 1. MANEJO DEL DOMICILIO
+        // 1. MANEJO SEGURO DEL DOMICILIO
         if (cliente.getDomicilio() != null) {
             Domicilio domicilio = cliente.getDomicilio();
             if (domicilio.getId() != null) {
@@ -59,7 +61,7 @@ public class ClienteService {
                     if (domicilio.getBarrio() != null) {
                         domicilioExistente.setBarrio(domicilio.getBarrio());
                     }
-                    cliente.setDomicilio(domicilioExistente);
+                    cliente.setDomicilio(domicilioRepository.save(domicilioExistente));
                 } else {
                     domicilio.setId(null);
                     cliente.setDomicilio(domicilioRepository.save(domicilio));
@@ -69,42 +71,96 @@ public class ClienteService {
             }
         }
 
-        // 2. CREACIÓN AUTOMÁTICA DE USUARIO (Solo al registrar un nuevo cliente)
+        // 2. CREACIÓN AUTOMÁTICA DE USUARIO
         if (cliente.getId() == null && cliente.getEmail() != null && !cliente.getEmail().isEmpty()) {
-
-            // Verificamos si ya existe un usuario con este email en la base de datos
             Optional<Usuario> usuarioExistente = usuarioRepository.findByEmail(cliente.getEmail());
-
             if (usuarioExistente.isEmpty()) {
                 Usuario nuevoUsuario = new Usuario();
                 nuevoUsuario.setEmail(cliente.getEmail());
-
-                // Encriptamos el DNI y lo establecemos como la contraseña por defecto
                 nuevoUsuario.setPassword(passwordEncoder.encode(cliente.getDni()));
                 nuevoUsuario.setActivo(true);
 
-                // Asignamos el perfil de "Cliente"
                 Perfil perfilCliente = perfilRepository.findById(2L).orElse(null);
                 nuevoUsuario.setPerfil(perfilCliente);
 
-                // Guardamos el usuario y lo asignamos al nuevo cliente
                 Usuario usuarioGuardado = usuarioRepository.save(nuevoUsuario);
                 cliente.setUsuario(usuarioGuardado);
             } else {
-                // Si el email ya tenía cuenta de usuario, lo vinculamos
                 cliente.setUsuario(usuarioExistente.get());
             }
         }
 
-        // 3. LÓGICA DE VENCIMIENTO DE SUSCRIPCIONES
+        // 3. LÓGICA DE VENCIMIENTO, DOMICILIO Y VALIDACIÓN DE PLANES DUPLICADOS
         if (cliente.getSuscripciones() != null) {
-            // Le decimos a Java que use explícitamente el huso horario de Argentina
             ZoneId zonaArgentina = ZoneId.of("America/Argentina/Buenos_Aires");
 
+            boolean yaTieneInternetActivo = false;
+            boolean yaTieneTvActivo = false;
+            boolean yaTieneTelefoniaActivo = false;
+
+            // A. Verificamos suscripciones activas que el cliente YA tenía guardadas en la BD
+            if (cliente.getId() != null) {
+                Optional<Cliente> clienteOpt = repository.findById(cliente.getId());
+                if (clienteOpt.isPresent() && clienteOpt.get().getSuscripciones() != null) {
+                    for (var subExistente : clienteOpt.get().getSuscripciones()) {
+                        if (subExistente.getFechaBaja() == null && subExistente.getServicio() != null) {
+                            String nombreServicio = subExistente.getServicio().getNombre() != null ? subExistente.getServicio().getNombre().toLowerCase() : "";
+
+                            if (nombreServicio.contains("internet") || nombreServicio.contains("mega") || nombreServicio.contains("mb")) {
+                                yaTieneInternetActivo = true;
+                            }
+                            if (nombreServicio.contains("tv") || nombreServicio.contains("television") || nombreServicio.contains("televisión") || nombreServicio.contains("digital") || nombreServicio.contains("canales")) {
+                                yaTieneTvActivo = true;
+                            }
+                            if (nombreServicio.contains("telefono") || nombreServicio.contains("teléfono") || nombreServicio.contains("fija") || nombreServicio.contains("telefonia") || nombreServicio.contains("telefonía")) {
+                                yaTieneTelefoniaActivo = true;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // B. Recorremos las suscripciones que vienen en el formulario actual
             for (var sub : cliente.getSuscripciones()) {
-                if (sub.getId() == null) {
-                    sub.setFechaAlta(LocalDate.now(zonaArgentina));
-                    sub.setFechaHasta(LocalDate.now(zonaArgentina).plusMonths(1));
+
+                if (cliente.getDomicilio() != null) {
+                    sub.setDomicilio(cliente.getDomicilio());
+                }
+
+                if (sub.getServicio() != null) {
+                    String nombreServicio = sub.getServicio().getNombre() != null ? sub.getServicio().getNombre().toLowerCase() : "";
+
+                    boolean esInternet = nombreServicio.contains("internet") || nombreServicio.contains("mega") || nombreServicio.contains("mb");
+                    boolean esTv = nombreServicio.contains("tv") || nombreServicio.contains("television") || nombreServicio.contains("televisión") || nombreServicio.contains("digital") || nombreServicio.contains("canales");
+                    boolean esTelefonia = nombreServicio.contains("telefono") || nombreServicio.contains("fija") || nombreServicio.contains("teléfono") || nombreServicio.contains("telefonia") || nombreServicio.contains("telefonía");
+
+                    // Si es una suscripción NUEVA (sin ID)
+                    if (sub.getId() == null) {
+
+                        if (esInternet) {
+                            if (yaTieneInternetActivo) {
+                                throw new RuntimeException("El cliente ya cuenta con un plan de internet activo. Debe dar de baja el anterior antes de contratar uno nuevo.");
+                            }
+                            yaTieneInternetActivo = true;
+                        }
+
+                        if (esTv) {
+                            if (yaTieneTvActivo) {
+                                throw new RuntimeException("El cliente ya cuenta con un plan de televisión activo. Debe dar de baja el anterior antes de contratar uno nuevo.");
+                            }
+                            yaTieneTvActivo = true;
+                        }
+
+                        if (esTelefonia) {
+                            if (yaTieneTelefoniaActivo) {
+                                throw new RuntimeException("El cliente ya cuenta con una línea de telefonía activa. Debe dar de baja la anterior antes de contratar una nueva.");
+                            }
+                            yaTieneTelefoniaActivo = true;
+                        }
+
+                        sub.setFechaAlta(LocalDate.now(zonaArgentina));
+                        sub.setFechaHasta(LocalDate.now(zonaArgentina).plusDays(30));
+                    }
                 }
             }
         }
