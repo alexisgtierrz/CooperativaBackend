@@ -1,13 +1,7 @@
 package com.cooperativa.coop_servicios_backend.services;
 
-import com.cooperativa.coop_servicios_backend.models.Cliente;
-import com.cooperativa.coop_servicios_backend.models.Domicilio;
-import com.cooperativa.coop_servicios_backend.models.Perfil;
-import com.cooperativa.coop_servicios_backend.models.Usuario;
-import com.cooperativa.coop_servicios_backend.repositories.ClienteRepository;
-import com.cooperativa.coop_servicios_backend.repositories.DomicilioRepository;
-import com.cooperativa.coop_servicios_backend.repositories.PerfilRepository;
-import com.cooperativa.coop_servicios_backend.repositories.UsuarioRepository;
+import com.cooperativa.coop_servicios_backend.models.*;
+import com.cooperativa.coop_servicios_backend.repositories.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -35,6 +29,9 @@ public class ClienteService {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private ServicioRepository servicioRepository;
 
     public List<Cliente> obtenerTodos() {
         return repository.findAll();
@@ -90,74 +87,43 @@ public class ClienteService {
             }
         }
 
-        // 3. LÓGICA DE VENCIMIENTO, DOMICILIO Y VALIDACIÓN DE PLANES DUPLICADOS
+        // 3. LÓGICA DE VENCIMIENTO, DOMICILIO Y VALIDACIÓN
         if (cliente.getSuscripciones() != null) {
             ZoneId zonaArgentina = ZoneId.of("America/Argentina/Buenos_Aires");
 
-            boolean yaTieneInternetActivo = false;
-            boolean yaTieneTvActivo = false;
-            boolean yaTieneTelefoniaActivo = false;
+            boolean tieneInternet = false;
+            boolean tieneTv = false;
+            boolean tieneTelefonia = false;
 
-            // A. Verificamos suscripciones activas que el cliente YA tenía guardadas en la BD
-            if (cliente.getId() != null) {
-                Optional<Cliente> clienteOpt = repository.findById(cliente.getId());
-                if (clienteOpt.isPresent() && clienteOpt.get().getSuscripciones() != null) {
-                    for (var subExistente : clienteOpt.get().getSuscripciones()) {
-                        if (subExistente.getFechaBaja() == null && subExistente.getServicio() != null) {
-                            String nombreServicio = subExistente.getServicio().getNombre() != null ? subExistente.getServicio().getNombre().toLowerCase() : "";
-
-                            if (nombreServicio.contains("internet") || nombreServicio.contains("mega") || nombreServicio.contains("mb")) {
-                                yaTieneInternetActivo = true;
-                            }
-                            if (nombreServicio.contains("tv") || nombreServicio.contains("television") || nombreServicio.contains("televisión") || nombreServicio.contains("digital") || nombreServicio.contains("canales")) {
-                                yaTieneTvActivo = true;
-                            }
-                            if (nombreServicio.contains("telefono") || nombreServicio.contains("teléfono") || nombreServicio.contains("fija") || nombreServicio.contains("telefonia") || nombreServicio.contains("telefonía")) {
-                                yaTieneTelefoniaActivo = true;
-                            }
-                        }
-                    }
-                }
-            }
-
-            // B. Recorremos las suscripciones que vienen en el formulario actual
             for (var sub : cliente.getSuscripciones()) {
 
                 if (cliente.getDomicilio() != null) {
                     sub.setDomicilio(cliente.getDomicilio());
                 }
 
-                if (sub.getServicio() != null) {
-                    String nombreServicio = sub.getServicio().getNombre() != null ? sub.getServicio().getNombre().toLowerCase() : "";
+                if (sub.getServicio() != null && sub.getServicio().getId() != null) {
+                    Long idServ = sub.getServicio().getId();
 
-                    boolean esInternet = nombreServicio.contains("internet") || nombreServicio.contains("mega") || nombreServicio.contains("mb");
-                    boolean esTv = nombreServicio.contains("tv") || nombreServicio.contains("television") || nombreServicio.contains("televisión") || nombreServicio.contains("digital") || nombreServicio.contains("canales");
-                    boolean esTelefonia = nombreServicio.contains("telefono") || nombreServicio.contains("fija") || nombreServicio.contains("teléfono") || nombreServicio.contains("telefonia") || nombreServicio.contains("telefonía");
+                    Servicio servicioReal = servicioRepository.findById(idServ)
+                            .orElseThrow(() -> new RuntimeException("El servicio seleccionado no existe"));
+                    sub.setServicio(servicioReal);
 
-                    // Si es una suscripción NUEVA (sin ID)
+                    // Validamos que no haya duplicados en la lista que se va a guardar
+                    if (idServ == 1L || idServ == 2L || idServ == 3L) {
+                        if (tieneInternet) throw new RuntimeException("No se puede tener más de un plan de Internet a la vez.");
+                        tieneInternet = true;
+                    }
+                    else if (idServ == 4L) {
+                        if (tieneTv) throw new RuntimeException("No se puede tener más de un plan de Televisión a la vez.");
+                        tieneTv = true;
+                    }
+                    else if (idServ == 5L) {
+                        if (tieneTelefonia) throw new RuntimeException("No se puede tener más de una línea de Telefonía a la vez.");
+                        tieneTelefonia = true;
+                    }
+
+                    // Si es una suscripción NUEVA (aún no tiene ID asignado), le generamos las fechas
                     if (sub.getId() == null) {
-
-                        if (esInternet) {
-                            if (yaTieneInternetActivo) {
-                                throw new RuntimeException("El cliente ya cuenta con un plan de internet activo. Debe dar de baja el anterior antes de contratar uno nuevo.");
-                            }
-                            yaTieneInternetActivo = true;
-                        }
-
-                        if (esTv) {
-                            if (yaTieneTvActivo) {
-                                throw new RuntimeException("El cliente ya cuenta con un plan de televisión activo. Debe dar de baja el anterior antes de contratar uno nuevo.");
-                            }
-                            yaTieneTvActivo = true;
-                        }
-
-                        if (esTelefonia) {
-                            if (yaTieneTelefoniaActivo) {
-                                throw new RuntimeException("El cliente ya cuenta con una línea de telefonía activa. Debe dar de baja la anterior antes de contratar una nueva.");
-                            }
-                            yaTieneTelefoniaActivo = true;
-                        }
-
                         sub.setFechaAlta(LocalDate.now(zonaArgentina));
                         sub.setFechaHasta(LocalDate.now(zonaArgentina).plusDays(30));
                     }
