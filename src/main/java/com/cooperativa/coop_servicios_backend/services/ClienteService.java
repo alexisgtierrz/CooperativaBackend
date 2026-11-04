@@ -55,6 +55,8 @@ public class ClienteService {
                     domicilioExistente.setPiso(domicilio.getPiso());
                     domicilioExistente.setDepartamento(domicilio.getDepartamento());
                     domicilioExistente.setObservaciones(domicilio.getObservaciones());
+                    domicilioExistente.setLatitud(domicilio.getLatitud());
+                    domicilioExistente.setLongitud(domicilio.getLongitud());
                     if (domicilio.getBarrio() != null) {
                         domicilioExistente.setBarrio(domicilio.getBarrio());
                     }
@@ -137,4 +139,4 @@ public class ClienteService {
     public void eliminar(Long id) {
         repository.deleteById(id);
     }
-}
+}
