@@ -21,6 +21,10 @@ public class Domicilio {
     private String departamento;
     private String observaciones;
 
+    // Coordenadas que el usuario marca en el mapa al cargar el domicilio
+    private Double latitud;
+    private Double longitud;
+
     @ManyToOne
     @JoinColumn(name = "barrio_id", nullable = false)
     private Barrio barrio;
@@ -81,5 +85,21 @@ public class Domicilio {
 
     public void setBarrio(Barrio barrio) {
         this.barrio = barrio;
+    }
+
+    public Double getLatitud() {
+        return latitud;
+    }
+
+    public void setLatitud(Double latitud) {
+        this.latitud = latitud;
+    }
+
+    public Double getLongitud() {
+        return longitud;
+    }
+
+    public void setLongitud(Double longitud) {
+        this.longitud = longitud;
     }
 }
