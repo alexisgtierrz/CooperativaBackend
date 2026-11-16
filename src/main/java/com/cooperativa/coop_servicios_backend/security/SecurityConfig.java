@@ -31,10 +31,15 @@ public class SecurityConfig {
         http
                 .cors(Customizer.withDefaults())
                 .csrf(csrf -> csrf.disable())
-                .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/login").permitAll()
+                        .requestMatchers("/error").permitAll()
                         .requestMatchers(HttpMethod.PUT, "/api/clientes/**").hasAuthority("MODIFICAR_CLIENTES")
+                        // Solicitudes de actualizacion de datos: el cliente autenticado crea y consulta la suya...
+                        .requestMatchers(HttpMethod.POST, "/api/solicitudes-actualizacion").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/solicitudes-actualizacion/mia").authenticated()
+                        // ...y todo lo demas (listar, confirmar, rechazar) es solo del administrador
+                        .requestMatchers("/api/solicitudes-actualizacion/**").hasAuthority("GESTIONAR_USUARIOS")
                         .anyRequest().authenticated() //TODAS las demás rutas requieren estar autenticado
                 )
                 //Le indicamos a Spring que no guarde sesiones en memoria
