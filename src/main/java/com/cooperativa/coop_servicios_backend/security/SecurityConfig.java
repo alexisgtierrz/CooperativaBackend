@@ -34,15 +34,23 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/login").permitAll()
                         .requestMatchers("/error").permitAll()
+                        //Catalogo de puestos de trabajo, solo lectura y solo para el administrador
+                        .requestMatchers(HttpMethod.GET, "/api/especialidades").hasAuthority("GESTIONAR_USUARIOS")
+                        .requestMatchers("/api/especialidades/**").denyAll()
                         .requestMatchers(HttpMethod.PUT, "/api/clientes/**").hasAuthority("MODIFICAR_CLIENTES")
-                        // Solicitudes de actualizacion de datos: el cliente autenticado crea y consulta la suya...
+                        //Solicitudes de actualizacion de datos, el cliente autenticado crea y consulta la suya...
                         .requestMatchers(HttpMethod.POST, "/api/solicitudes-actualizacion").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/solicitudes-actualizacion/mia").authenticated()
                         // ...y todo lo demas (listar, confirmar, rechazar) es solo del administrador
                         .requestMatchers("/api/solicitudes-actualizacion/**").hasAuthority("GESTIONAR_USUARIOS")
-                        .anyRequest().authenticated() //TODAS las demás rutas requieren estar autenticado
+                        // Reclamos: la bandeja y las acciones del tecnico son solo para empleados
+                        .requestMatchers(HttpMethod.GET, "/api/reclamos/sin-asignar", "/api/reclamos/asignados").hasAuthority("ROLE_EMPLEADO")
+                        .requestMatchers(HttpMethod.PUT, "/api/reclamos/*/asignar", "/api/reclamos/*/estado").hasAuthority("ROLE_EMPLEADO")
+                        .requestMatchers(HttpMethod.POST, "/api/reclamos").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/reclamos/mis-reclamos").authenticated()
+                        .requestMatchers("/api/reclamos/**").denyAll()
+                        .anyRequest().authenticated()
                 )
-                //Le indicamos a Spring que no guarde sesiones en memoria
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 

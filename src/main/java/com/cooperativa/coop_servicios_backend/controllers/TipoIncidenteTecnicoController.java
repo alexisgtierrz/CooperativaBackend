@@ -1,6 +1,7 @@
 package com.cooperativa.coop_servicios_backend.controllers;
 
 import com.cooperativa.coop_servicios_backend.models.TipoIncidenteTecnico;
+import com.cooperativa.coop_servicios_backend.services.EspecialidadService;
 import com.cooperativa.coop_servicios_backend.services.TipoIncidenteTecnicoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -16,6 +17,9 @@ public class TipoIncidenteTecnicoController {
     @Autowired
     private TipoIncidenteTecnicoService service;
 
+    @Autowired
+    private EspecialidadService especialidadService;
+
     @GetMapping
     public List<TipoIncidenteTecnico> listarTodos() { return service.obtenerTodos(); }
 
@@ -25,13 +29,17 @@ public class TipoIncidenteTecnicoController {
     }
 
     @PostMapping
-    public TipoIncidenteTecnico crear(@RequestBody TipoIncidenteTecnico tipo) { return service.guardar(tipo); }
+    public TipoIncidenteTecnico crear(@RequestBody TipoIncidenteTecnico tipo) {
+        tipo.setEspecialidad(especialidadService.validarYNormalizar(tipo.getEspecialidad()));
+        return service.guardar(tipo);
+    }
 
     @PutMapping("/{id}")
     public ResponseEntity<TipoIncidenteTecnico> actualizar(@PathVariable Long id, @RequestBody TipoIncidenteTecnico detalles) {
         return service.obtenerPorId(id).map(existente -> {
             existente.setNombre(detalles.getNombre());
             existente.setGravedad(detalles.getGravedad());
+            existente.setEspecialidad(especialidadService.validarYNormalizar(detalles.getEspecialidad()));
             return ResponseEntity.ok(service.guardar(existente));
         }).orElse(ResponseEntity.notFound().build());
     }

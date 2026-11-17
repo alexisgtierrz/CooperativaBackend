@@ -8,11 +8,11 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface EmpleadoRepository extends JpaRepository<Empleado, Long> {
 
-    // Busca el legajo mas alto (comparacion de texto)
+    //Busca el legajo mas alto
     @Query("SELECT MAX(e.legajo) FROM Empleado e")
     String findMaxLegajo();
 
-    // Legajo mas alto como numero (0 si no hay empleados)
+    //Legajo mas alto como numero (0 si no hay empleados)
     @Query(value = "SELECT COALESCE(MAX(CAST(NULLIF(regexp_replace(legajo, '\\D', '', 'g'), '') AS INTEGER)), 0) FROM empleados",
             nativeQuery = true)
     Integer findMaxLegajoNumerico();
@@ -20,4 +20,6 @@ public interface EmpleadoRepository extends JpaRepository<Empleado, Long> {
     boolean existsByDni(String dni);
 
     boolean existsByUsuarioId(Long usuarioId);
+
+    java.util.Optional<Empleado> findByUsuarioEmail(String email);
 }

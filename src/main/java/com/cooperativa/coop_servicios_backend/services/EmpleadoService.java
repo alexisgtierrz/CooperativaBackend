@@ -14,7 +14,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
-import java.text.Normalizer;
 
 import java.util.List;
 import java.util.Optional;
@@ -34,6 +33,9 @@ public class EmpleadoService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private EspecialidadService especialidadService;
+
     @PersistenceContext
     private EntityManager entityManager;
 
@@ -49,22 +51,25 @@ public class EmpleadoService {
     public Empleado guardar(Empleado empleado) {
         boolean esNuevo = empleado.getId() == null;
 
+        //La especialidad debe ser un puesto
+        empleado.setEspecialidad(especialidadService.validarYNormalizar(empleado.getEspecialidad()));
+
         if (esNuevo) {
             if (empleado.getDni() != null && repository.existsByDni(empleado.getDni())) {
                 throw new ResponseStatusException(HttpStatus.CONFLICT,
                         "Ya existe un empleado con el DNI " + empleado.getDni());
             }
 
-            // 1. Legajo secuencial de 3 digitos (comparacion numerica, no de texto)
+            //Legajo secuencial de 3 digitos
             Integer maxLegajo = repository.findMaxLegajoNumerico();
             int siguiente = (maxLegajo == null ? 0 : maxLegajo) + 1;
             empleado.setLegajo(String.format("%03d", siguiente));
 
-            // 3. Dejar la secuencia de IDs por encima del MAX(id) real
+            //Dejar la secuencia de IDs por encima del MAX(id) real
             sincronizarSecuenciaId();
         }
 
-        // 2. Usuario asociado
+        //Usuario asociado
         if (empleado.getUsuario() == null) {
             empleado.setUsuario(obtenerOCrearUsuario(empleado));
         }
@@ -83,36 +88,32 @@ public class EmpleadoService {
         String baseEmail = nombreLimpio + "." + apellidoLimpio;
         String email = baseEmail + "@empleado.coop";
 
-        // Si el email ya existe en la BD:
-        // - Si está libre (no asociado a otro empleado), lo reutilizamos.
-        // - Si ya está ocupado por otro empleado, probamos con un sufijo numérico (ej. juan.gomez2@empleado.coop).
+        //Si el email ya existe en la BD:
+        //Si está libre (no asociado a otro empleado), lo reutilizamos.
+        //Si ya está ocupado por otro empleado, probamos con un sufijo numérico
         int contador = 2;
         while (true) {
             Optional<Usuario> existente = usuarioRepository.findByEmail(email);
             if (existente.isEmpty()) {
-                break; // Email disponible para crear usuario nuevo
+                break; //Email disponible para crear usuario nuevo
             }
 
             Usuario usuarioExistente = existente.get();
             if (!repository.existsByUsuarioId(usuarioExistente.getId())) {
-                return usuarioExistente; // Usuario huérfano existente, lo reutilizamos
+                return usuarioExistente; //Usuario huérfano existente, lo reutilizamos
             }
 
             email = baseEmail + contador + "@empleado.coop";
             contador++;
         }
 
-        // Creamos el usuario nuevo con el email disponible
+        //Se crea el usuario nuevo con el email disponible
         Usuario nuevoUsuario = new Usuario();
         nuevoUsuario.setEmail(email);
         nuevoUsuario.setPassword(passwordEncoder.encode(empleado.getDni()));
         nuevoUsuario.setActivo(true);
 
-        Perfil perfilEmpleado = perfilRepository.findByNombre("Empleado")
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.INTERNAL_SERVER_ERROR,
-                        "No se encontró el perfil 'Empleado' en la base de datos"
-                ));
+        Perfil perfilEmpleado = obtenerOCrearPerfilEmpleado();
 
         nuevoUsuario.setPerfil(perfilEmpleado);
 

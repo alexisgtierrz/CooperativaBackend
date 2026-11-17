@@ -12,6 +12,8 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
+import java.text.Normalizer;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -35,7 +37,7 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
 
-        // Buscamos si existe un usuario con ese email
+        //Buscamos si existe un usuario con ese email
         Optional<Usuario> usuarioOpt = usuarioService.obtenerPorEmail(request.getEmail());
 
         if (usuarioOpt.isEmpty()) {
@@ -44,16 +46,19 @@ public class AuthController {
 
         Usuario usuario = usuarioOpt.get();
 
-        // Comparamos la contraseña enviada con el Hash guardado en la base de datos
+        //Comparamos la contraseña enviada con el Hash guardado en la base de datos
         if (!passwordEncoder.matches(request.getPassword(), usuario.getPassword())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Credenciales incorrectas");
         }
 
-        List<GrantedAuthority> autoridades = usuario.getPerfil().getPermisos().stream()
+        List<GrantedAuthority> autoridades = new ArrayList<>(usuario.getPerfil().getPermisos().stream()
                 .map(permiso -> new SimpleGrantedAuthority(permiso.getNombre()))
-                .collect(Collectors.toList());
+                .collect(Collectors.toList()));
 
-        // Generamos el Token JWT inyectando las autoridades
+        //El rol viaja en el token como ROLE_<NOMBRE>: ROLE_EMPLEADO, ROLE_CLIENTE, ROLE_ADMINISTRADOR...
+        autoridades.add(new SimpleGrantedAuthority("ROLE_" + normalizarRol(usuario.getPerfil().getNombre())));
+
+        //Se genera el Token JWT inyectando las autoridades
         String token = jwtUtil.generarToken(usuario.getEmail(), autoridades);
 
         Map<String, String> response = new HashMap<>();
@@ -63,5 +68,14 @@ public class AuthController {
         response.put("perfil", usuario.getPerfil().getNombre());
 
         return ResponseEntity.ok(response);
+    }
+
+    //"Empleado" / "ROLE_EMPLEADO" / "Técnico Jefe" -> "EMPLEADO" / "EMPLEADO" / "TECNICO_JEFE" */
+    private static String normalizarRol(String nombrePerfil) {
+        if (nombrePerfil == null) return "SIN_PERFIL";
+        String n = Normalizer.normalize(nombrePerfil, Normalizer.Form.NFD).replaceAll("\\p{M}", "")
+                .trim().toUpperCase().replaceAll("[^A-Z0-9]+", "_");
+        if (n.startsWith("ROLE_")) n = n.substring(5);
+        return n.isEmpty() ? "SIN_PERFIL" : n;
     }
 }

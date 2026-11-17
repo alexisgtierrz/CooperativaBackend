@@ -11,9 +11,14 @@ public class TipoIncidenteTecnico {
     private String nombre;
     @Column(nullable = false, length = 50)
     private String gravedad;
-    public TipoIncidenteTecnico() {}
-    // Getters y Setters...
 
+    //Area/especialidad tecnica que resuelve este tipo de incidente.
+    //Se compara con Empleado.especialidad
+    @Column(length = 100)
+    private String especialidad;
+    public TipoIncidenteTecnico() {}
+
+    // Getters y Setters...
     public Long getId() {
         return id;
     }
@@ -28,6 +33,14 @@ public class TipoIncidenteTecnico {
 
     public void setNombre(String nombre) {
         this.nombre = nombre;
+    }
+
+    public String getEspecialidad() {
+        return especialidad;
+    }
+
+    public void setEspecialidad(String especialidad) {
+        this.especialidad = especialidad;
     }
 
     public String getGravedad() {

@@ -1,11 +1,14 @@
 package com.cooperativa.coop_servicios_backend.controllers;
 
+import com.cooperativa.coop_servicios_backend.DTOs.EmpleadoPerfilResponse;
 import com.cooperativa.coop_servicios_backend.models.Empleado;
+import com.cooperativa.coop_servicios_backend.services.ReclamoService;
 import com.cooperativa.coop_servicios_backend.services.EmpleadoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.List;
 
 @CrossOrigin(origins = "http://localhost:5173")
@@ -19,6 +22,17 @@ public class EmpleadoController {
     @GetMapping
     public List<Empleado> listarTodos() {
         return service.obtenerTodos();
+    }
+
+    @Autowired
+    private ReclamoService reclamoService;
+
+    //Datos del empleado autenticado (404 si el usuario no es un empleado). El front lo usa para saber el rol
+    @GetMapping("/perfil-actual")
+    public ResponseEntity<EmpleadoPerfilResponse> perfilActual(Principal principal) {
+        return reclamoService.perfilEmpleado(principal.getName())
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/{id}")

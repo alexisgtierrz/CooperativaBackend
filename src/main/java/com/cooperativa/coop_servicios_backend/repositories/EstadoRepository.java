@@ -6,4 +6,6 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface EstadoRepository extends JpaRepository<Estado, Long> {
+
+    java.util.Optional<Estado> findFirstByNombreIgnoreCaseOrderByIdAsc(String nombre);
 }

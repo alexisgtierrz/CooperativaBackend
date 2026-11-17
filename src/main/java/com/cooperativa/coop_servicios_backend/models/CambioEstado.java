@@ -1,5 +1,6 @@
 package com.cooperativa.coop_servicios_backend.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 
@@ -22,14 +23,15 @@ public class CambioEstado {
     private Estado estado;
 
     //Registramos qué empleado hizo el cambio
+    //Es null en el estado inicial (reclamo todavia sin tecnico asignado)
     @ManyToOne
-    @JoinColumn(name = "empleado_id", nullable = false)
+    @JoinColumn(name = "empleado_id")
+    @JsonIgnoreProperties({"usuario"}) // evita exponer el hash de la contrasena del tecnico
     private Empleado empleado;
 
     public CambioEstado() {}
 
     // Getters y Setters...
-
     public Long getId() {
         return id;
     }
