@@ -37,6 +37,12 @@ public class SecurityConfig {
                         //Catalogo de puestos de trabajo, solo lectura y solo para el administrador
                         .requestMatchers(HttpMethod.GET, "/api/especialidades").hasAuthority("GESTIONAR_USUARIOS")
                         .requestMatchers("/api/especialidades/**").denyAll()
+                        //Cobro de facturas: el asociado ve las suyas y paga; el webhook de Mercado Pago es publico
+                        .requestMatchers(HttpMethod.GET, "/api/facturas/mis-facturas").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/pagos/webhook").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/pagos/crear-preferencia", "/api/pagos/confirmar").authenticated()
+                        //El resto de facturas y pagos es solo del administrador
+                        .requestMatchers("/api/facturas/**", "/api/pagos/**").hasAuthority("GESTIONAR_USUARIOS")
                         .requestMatchers(HttpMethod.PUT, "/api/clientes/**").hasAuthority("MODIFICAR_CLIENTES")
                         //Solicitudes de actualizacion de datos, el cliente autenticado crea y consulta la suya...
                         .requestMatchers(HttpMethod.POST, "/api/solicitudes-actualizacion").authenticated()

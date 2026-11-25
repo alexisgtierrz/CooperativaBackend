@@ -1,10 +1,14 @@
 package com.cooperativa.coop_servicios_backend.controllers;
 
 import com.cooperativa.coop_servicios_backend.models.Factura;
+import com.cooperativa.coop_servicios_backend.DTOs.FacturaResponse;
+import com.cooperativa.coop_servicios_backend.services.FacturaPagoService;
 import com.cooperativa.coop_servicios_backend.services.FacturaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.security.Principal;
 
 import java.util.List;
 
@@ -15,6 +19,15 @@ public class FacturaController {
 
     @Autowired
     private FacturaService service;
+
+    @Autowired
+    private FacturaPagoService pagoService;
+
+    //Facturas del usuario autenticado
+    @GetMapping("/mis-facturas")
+    public List<FacturaResponse> misFacturas(@RequestParam(required = false) String estado, Principal principal) {
+        return pagoService.misFacturas(principal.getName(), estado);
+    }
 
     @GetMapping
     public List<Factura> listarTodas() {

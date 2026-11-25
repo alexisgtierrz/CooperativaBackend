@@ -3,6 +3,7 @@ package com.cooperativa.coop_servicios_backend.config;
 import com.cooperativa.coop_servicios_backend.models.Empleado;
 import com.cooperativa.coop_servicios_backend.models.Especialidad;
 import com.cooperativa.coop_servicios_backend.models.Estado;
+import com.cooperativa.coop_servicios_backend.models.MedioPago;
 import com.cooperativa.coop_servicios_backend.models.Perfil;
 import com.cooperativa.coop_servicios_backend.models.Permiso;
 import com.cooperativa.coop_servicios_backend.models.TipoIncidenteTecnico;
@@ -10,6 +11,7 @@ import com.cooperativa.coop_servicios_backend.models.Usuario;
 import com.cooperativa.coop_servicios_backend.repositories.EmpleadoRepository;
 import com.cooperativa.coop_servicios_backend.repositories.EspecialidadRepository;
 import com.cooperativa.coop_servicios_backend.repositories.EstadoRepository;
+import com.cooperativa.coop_servicios_backend.repositories.MedioPagoRepository;
 import com.cooperativa.coop_servicios_backend.repositories.PerfilRepository;
 import com.cooperativa.coop_servicios_backend.repositories.PermisoRepository;
 import com.cooperativa.coop_servicios_backend.repositories.TipoIncidenteTecnicoRepository;
@@ -64,7 +66,7 @@ public class DataSeeder implements CommandLineRunner {
     );
     private static final List<String> TABLAS_CON_SECUENCIA = List.of(
             "permisos", "perfiles", "usuarios", "localidades", "barrios",
-            "especialidades", "estados", "tipos_incidente");
+            "especialidades", "estados", "tipos_incidente", "medios_pago", "pagos");
 
     @Autowired private PerfilRepository perfilRepository;
     @Autowired private PermisoRepository permisoRepository;
@@ -73,6 +75,7 @@ public class DataSeeder implements CommandLineRunner {
     @Autowired private EstadoRepository estadoRepository;
     @Autowired private TipoIncidenteTecnicoRepository tipoRepository;
     @Autowired private EmpleadoRepository empleadoRepository;
+    @Autowired private MedioPagoRepository medioPagoRepository;
     @Autowired private PasswordEncoder passwordEncoder;
     @Autowired private PlatformTransactionManager transactionManager;
     @PersistenceContext private EntityManager entityManager;
@@ -95,6 +98,7 @@ public class DataSeeder implements CommandLineRunner {
             seedEstados();
             seedTiposIncidente();
             seedUsuariosBase();
+            seedMediosPago();
         });
     }
 
@@ -252,6 +256,18 @@ public class DataSeeder implements CommandLineRunner {
     private static boolean contieneAlguna(String texto, String... claves) {
         for (String c : claves) if (texto.contains(c)) return true;
         return false;
+    }
+
+    //medios de pago y facturas
+    private void seedMediosPago() {
+        if (medioPagoRepository.findAll().stream().noneMatch(m -> "Mercado Pago".equalsIgnoreCase(m.getNombre()))) {
+            MedioPago mp = new MedioPago();
+            mp.setNombre("Mercado Pago");
+            mp.setEsActivo(true);
+            medioPagoRepository.save(mp);
+        }
+        //Facturas cargadas antes de existir la columna "estado": cuentan como pendientes
+        entityManager.createNativeQuery("UPDATE facturas SET estado = 'PENDIENTE' WHERE estado IS NULL").executeUpdate();
     }
 
     //usuarios base
