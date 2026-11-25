@@ -1,6 +1,7 @@
 package com.cooperativa.coop_servicios_backend.controllers;
 
 import com.cooperativa.coop_servicios_backend.models.Factura;
+import com.cooperativa.coop_servicios_backend.DTOs.CobranzaResponse;
 import com.cooperativa.coop_servicios_backend.DTOs.FacturaResponse;
 import com.cooperativa.coop_servicios_backend.services.FacturaPagoService;
 import com.cooperativa.coop_servicios_backend.services.FacturaService;
@@ -27,6 +28,12 @@ public class FacturaController {
     @GetMapping("/mis-facturas")
     public List<FacturaResponse> misFacturas(@RequestParam(required = false) String estado, Principal principal) {
         return pagoService.misFacturas(principal.getName(), estado);
+    }
+
+    //Cobranzas: clientes con servicios, facturas y deuda (solo administrador)
+    @GetMapping("/cobranzas")
+    public List<CobranzaResponse> cobranzas() {
+        return pagoService.cobranzas();
     }
 
     @GetMapping

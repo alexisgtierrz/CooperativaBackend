@@ -1,5 +1,6 @@
 package com.cooperativa.coop_servicios_backend.services;
 
+import com.cooperativa.coop_servicios_backend.DTOs.CobranzaResponse;
 import com.cooperativa.coop_servicios_backend.DTOs.FacturaResponse;
 import com.cooperativa.coop_servicios_backend.DTOs.PagoRequests;
 import com.cooperativa.coop_servicios_backend.models.Cliente;
@@ -123,7 +124,58 @@ public class FacturaPagoService {
         }
     }
 
-    // ------------------------------------------------------------------ conciliacion automatica
+    // ------------------------------------------------------------------ cobranzas (administrador)
+
+    //Situacion de cobranza de todos los clientes: servicios activos, facturas, deuda y atraso. Antes de armarla. Ordenada con los mayores deudores primero.
+    @Transactional
+    public List<CobranzaResponse> cobranzas() {
+        LocalDate hoy = LocalDate.now();
+        List<CobranzaResponse> resultado = new ArrayList<>();
+        for (Cliente c : clienteRepository.findAll()) {
+            emitirFacturasDelCiclo(c.getId());
+
+            List<CobranzaResponse.ServicioContratado> servicios = new ArrayList<>();
+            if (c.getSuscripciones() != null) {
+                for (Suscripcion s : c.getSuscripciones()) {
+                    if (s.getFechaBaja() != null || s.getServicio() == null) continue;
+                    servicios.add(new CobranzaResponse.ServicioContratado(
+                            s.getServicio().getNombre(), s.getFechaHasta() == null ? null : s.getFechaHasta().toString()));
+                }
+            }
+
+            List<FacturaResponse> facturas = new ArrayList<>();
+            int pendientes = 0, vencidas = 0;
+            double deuda = 0, deudaVencida = 0;
+            long maxAtraso = 0;
+            LocalDate proximo = null;
+            for (Factura f : facturaRepository.findByClienteIdOrderByFechaVencimientoAsc(c.getId())) {
+                facturas.add(aRespuesta(f));
+                if (f.getEstado() != EstadoFactura.PENDIENTE) continue;
+                pendientes++;
+                deuda += f.getMontoTotal();
+                if (f.getFechaVencimiento().isBefore(hoy)) {
+                    vencidas++;
+                    deudaVencida += f.getMontoTotal();
+                    maxAtraso = Math.max(maxAtraso, java.time.temporal.ChronoUnit.DAYS.between(f.getFechaVencimiento(), hoy));
+                } else if (proximo == null || f.getFechaVencimiento().isBefore(proximo)) {
+                    proximo = f.getFechaVencimiento();
+                }
+            }
+            java.util.Collections.reverse(facturas); // las mas recientes primero
+
+            String nombre = ((c.getApellido() == null ? "" : c.getApellido()) + ", " + (c.getNombre() == null ? "" : c.getNombre())).trim();
+            resultado.add(new CobranzaResponse(c.getId(), nombre, c.getDni(), c.getEmail(), c.getTelefono(),
+                    !Boolean.FALSE.equals(c.getActivo()), servicios, pendientes, vencidas, deuda, deudaVencida,
+                    maxAtraso, proximo == null ? null : proximo.toString(), facturas));
+        }
+        resultado.sort(java.util.Comparator
+                .comparingDouble(CobranzaResponse::deudaVencida).reversed()
+                .thenComparing(java.util.Comparator.comparingDouble(CobranzaResponse::deudaTotal).reversed())
+                .thenComparing(CobranzaResponse::nombre, String.CASE_INSENSITIVE_ORDER));
+        return resultado;
+    }
+
+    //conciliacion automatica
 
     //Si el usuario pago en Mercado Pago pero no volvio al sitio (y el webhook no pudo llegar, p. ej. en localhost), la factura quedaria PENDIENTE. Por eso, al listar, se consulta a Mercado Pago si cada factura pendiente ya tiene un pago aprobado (por su external_reference) y, de ser asi, se acredita. Nunca rompe el listado: ante cualquier falla de Mercado Pago la factura simplemente sigue pendiente
     private void reconciliarPagosPendientes(Long clienteId) {
